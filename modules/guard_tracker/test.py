@@ -1,42 +1,57 @@
-# modules/<feature_name>/test.py
-
+import sys
+import os
 import cv2
-from inference import YourFeatureModule  # Replace with your actual class name
-from datetime import datetime
+import numpy as np
 
-def get_timestamp():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# Add project root to path so we can import correctly
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-def main():
-    module = YourFeatureModule()
+# Local import of the guard module
+from inference import GuardVigilanceModule
 
-    # Use webcam (0), or replace with video file path for testing
-    cap = cv2.VideoCapture(0)
+# Initialize the module
+module = GuardVigilanceModule()
 
-    if not cap.isOpened():
-        print("[ERROR] Could not open video stream.")
-        return
+# Webcam capture
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("❌ Webcam not accessible.")
+    exit()
 
-    print("[INFO] Starting dummy test for <feature_name>...")
+print("📸 Press 'q' to quit...")
+
+try:
     while True:
         ret, frame = cap.read()
         if not ret:
+            print("❌ Couldn't read frame.")
             break
 
-        timestamp = get_timestamp()
-        result = module.run(frame, timestamp)
+        result = module.run(frame)
 
-        # Print result to console
-        print(f"[{result['module']}] {result['status']} | {result['details']} | Confidence: {result['confidence']:.2f}")
+        status = result["status"]
+        confidence = result["confidence"]
+        details = result["details"]
 
-        # Optional: display the feed
-        cv2.imshow("<feature_name> Test", frame)
+        color_map = {
+            "attentive": (0, 255, 0),
+            "sleeping": (0, 0, 255),
+            "distracted": (0, 255, 255),
+            "absent": (128, 128, 128),
+            "unknown": (255, 255, 255)
+        }
+        color = color_map.get(status, (255, 255, 255))
+        label = f"{status.upper()} ({confidence:.2f})"
+
+        cv2.putText(frame, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+        cv2.putText(frame, details, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
+
+        cv2.imshow("Guard Tracker", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    cap.release()
-    cv2.destroyAllWindows()
-    print("[INFO] Test ended.")
+except KeyboardInterrupt:
+    print("\n⛔ Exiting on user interrupt.")
 
-if __name__ == "__main__":
-    main()
+cap.release()
+cv2.destroyAllWindows()
