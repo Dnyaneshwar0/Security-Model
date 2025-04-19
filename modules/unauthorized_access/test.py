@@ -1,40 +1,26 @@
-import sys
 import os
+import sys
+import cv2
 
-# Add root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-import cv2
-import numpy as np
 from modules.unauthorized_access.inference import UnauthorizedAccessModule
 
-def run_test_with_video(video_path=None):
-    print("🔍 Initializing Unauthorized Access Monitoring Module...")
-    module = UnauthorizedAccessModule()
-
-    if video_path:
-        cap = cv2.VideoCapture(video_path)
-        print(f"📽️ Processing video: {video_path}")
-    else:
-        cap = cv2.VideoCapture(0)
-        print("🎥 Using webcam...")
-
+def run_with_webcam(module):
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        print("❌ Failed to open video source.")
+        print("❌ Webcam not accessible.")
         return
 
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("🔚 End of video stream.")
             break
 
-        # Run the module's detection
         result = module.run(frame)
         print(f"[{result['status'].upper()}] - {result['details']}")
-
-        # Annotate frame for visualization (optional)
-        cv2.imshow("Unauthorized Access Monitoring", frame)
+        annotated = result.get("annotated_frame", frame)
+        cv2.imshow("Unauthorized Access Monitoring", annotated)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -42,16 +28,46 @@ def run_test_with_video(video_path=None):
     cap.release()
     cv2.destroyAllWindows()
 
+def run_with_videos(module):
+    input_dir = "videodata"
+    output_dir = "outputdata"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for file in os.listdir(input_dir):
+        if file.endswith((".mp4", ".avi", ".mov")):
+            input_path = os.path.join(input_dir, file)
+            output_path = os.path.join(output_dir, f"output_{file}")
+            cap = cv2.VideoCapture(input_path)
+
+            if not cap.isOpened():
+                print(f"❌ Could not open {file}")
+                continue
+
+            width = int(cap.get(3))
+            height = int(cap.get(4))
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+
+            print(f"📽️ Processing {file}...")
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                result = module.run(frame)
+                annotated = result.get("annotated_frame", frame)
+                out.write(annotated)
+
+            cap.release()
+            out.release()
+            print(f"✅ Output saved to {output_path}")
+
 if __name__ == "__main__":
+    module = UnauthorizedAccessModule(config={"window_area": (100, 500, 50, 400)})
     print("1. Use Webcam")
-    print("2. Test with video file")
+    print("2. Process videos in 'videodata/' folder")
     choice = input("Enter your choice: ")
 
     if choice == '2':
-        video_file = input("Enter path to video file: ")
-        if os.path.exists(video_file):
-            run_test_with_video(video_file)
-        else:
-            print("❌ File not found.")
+        run_with_videos(module)
     else:
-        run_test_with_video()
+        run_with_webcam(module)

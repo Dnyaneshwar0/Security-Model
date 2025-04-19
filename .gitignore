@@ -1,2 +1,7 @@
 /venv
 /models
+/core/__pycache__
+/modules/altercation_detector/__pycache__
+/modules/anomaly_detector/__pycache__
+/modules/guard_tracker/__pycache__
+/modules/unauthorized_access/__pycache__

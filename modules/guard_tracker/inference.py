@@ -111,6 +111,6 @@ class GuardVigilanceModule(MonitoringModule):
         return {
             "status": status,
             "confidence": round(ear, 3),
-            "details": f"EAR: {ear:.3f}, Yaw: {yaw:.1f}°",
+            "details": f"EAR: {ear:.3f}, Yaw: {yaw:.1f}deg",
             "module": "guard_vigilance"
         }
