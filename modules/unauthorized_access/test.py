@@ -1,42 +1,57 @@
-# modules/<feature_name>/test.py
+import sys
+import os
+
+# Add root directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 import cv2
-from inference import YourFeatureModule  # Replace with your actual class name
-from datetime import datetime
+import numpy as np
+from modules.unauthorized_access.inference import UnauthorizedAccessModule
 
-def get_timestamp():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def run_test_with_video(video_path=None):
+    print("🔍 Initializing Unauthorized Access Monitoring Module...")
+    module = UnauthorizedAccessModule()
 
-def main():
-    module = YourFeatureModule()
-
-    # Use webcam (0), or replace with video file path for testing
-    cap = cv2.VideoCapture(0)
+    if video_path:
+        cap = cv2.VideoCapture(video_path)
+        print(f"📽️ Processing video: {video_path}")
+    else:
+        cap = cv2.VideoCapture(0)
+        print("🎥 Using webcam...")
 
     if not cap.isOpened():
-        print("[ERROR] Could not open video stream.")
+        print("❌ Failed to open video source.")
         return
 
-    print("[INFO] Starting dummy test for <feature_name>...")
     while True:
         ret, frame = cap.read()
         if not ret:
+            print("🔚 End of video stream.")
             break
 
-        timestamp = get_timestamp()
-        result = module.run(frame, timestamp)
+        # Run the module's detection
+        result = module.run(frame)
+        print(f"[{result['status'].upper()}] - {result['details']}")
 
-        # Print result to console
-        print(f"[{result['module']}] {result['status']} | {result['details']} | Confidence: {result['confidence']:.2f}")
+        # Annotate frame for visualization (optional)
+        cv2.imshow("Unauthorized Access Monitoring", frame)
 
-        # Optional: display the feed
-        cv2.imshow("<feature_name> Test", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
     cap.release()
     cv2.destroyAllWindows()
-    print("[INFO] Test ended.")
 
 if __name__ == "__main__":
-    main()
+    print("1. Use Webcam")
+    print("2. Test with video file")
+    choice = input("Enter your choice: ")
+
+    if choice == '2':
+        video_file = input("Enter path to video file: ")
+        if os.path.exists(video_file):
+            run_test_with_video(video_file)
+        else:
+            print("❌ File not found.")
+    else:
+        run_test_with_video()
