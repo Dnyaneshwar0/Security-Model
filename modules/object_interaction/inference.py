@@ -1,12 +1,10 @@
 # modules/unattended_object_touch/inference.py
-from core.module_interface import MonitoringModule
 import cv2
 import torch
 import numpy as np
 
-class UnattendedObjectTouchModule(MonitoringModule):
-    def __init__(self, config=None):
-        super().__init__(config)
+class UnattendedObjectTouchModule:
+    def __init__(self):
         self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', trust_repo=True)
         self.target_objects = ['backpack', 'bottle', 'laptop', 'handbag']
 
@@ -24,9 +22,18 @@ class UnattendedObjectTouchModule(MonitoringModule):
             left_hand = (px1 + int(0.1 * pw), py1 + int(0.4 * ph))
             right_hand = (px2 - int(0.1 * pw), py1 + int(0.4 * ph))
 
+            # Draw person box and hands
+            cv2.rectangle(frame, (px1, py1), (px2, py2), (0, 255, 0), 2)
+            cv2.circle(frame, left_hand, 5, (255, 0, 0), -1)
+            cv2.circle(frame, right_hand, 5, (0, 0, 255), -1)
+
             for _, obj in objects.iterrows():
                 ox1, oy1, ox2, oy2 = int(obj.xmin), int(obj.ymin), int(obj.xmax), int(obj.ymax)
                 label = obj['name']
+                # Draw object box and label
+                cv2.rectangle(frame, (ox1, oy1), (ox2, oy2), (255, 255, 0), 2)
+                cv2.putText(frame, label, (ox1, oy1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+
                 if ox1 < left_hand[0] < ox2 and oy1 < left_hand[1] < oy2 or \
                    ox1 < right_hand[0] < ox2 and oy1 < right_hand[1] < oy2:
                     touched_objects.add(label)

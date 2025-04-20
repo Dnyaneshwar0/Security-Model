@@ -8,8 +8,8 @@ import os
 class AnomalyDetector:
     def __init__(self, config=None):
         self.MIN_CONFIDENCE = 0.5
-        self.ACTIVE_START_HOUR = 16  # 4 PM
-        self.ACTIVE_END_HOUR = 5     # 5 AM
+        self.ACTIVE_START_HOUR = 22  # 4 PM
+        self.ACTIVE_END_HOUR = 8   # 5 AM
 
         model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "models"))
         self.net = cv2.dnn.readNetFromCaffe(

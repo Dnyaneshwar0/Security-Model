@@ -5,7 +5,6 @@ import numpy as np
 import time
 import platform
 
-
 # Optional: for audio cue on Windows
 if platform.system() == "Windows":
     import winsound

@@ -10,9 +10,9 @@ class GuardVigilanceModule(MonitoringModule):
     def __init__(self, config=None):
         super().__init__(config)
         base = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../models'))
-
+        
         self.face_net = cv2.dnn.readNetFromCaffe(
-            os.path.join(base, "deploy.prototxt"),
+            os.path.join(base, "deploy1.prototxt"),
             os.path.join(base, "res10_300x300_ssd_iter_140000.caffemodel")
         )
 
