@@ -9,7 +9,7 @@ class AnomalyDetector:
     def __init__(self, config=None):
         self.MIN_CONFIDENCE = 0.5
         self.ACTIVE_START_HOUR = 22  # 4 PM
-        self.ACTIVE_END_HOUR = 8   # 5 AM
+        self.ACTIVE_END_HOUR = 9   # 5 AM
 
         model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "models"))
         self.net = cv2.dnn.readNetFromCaffe(
@@ -57,15 +57,14 @@ class AnomalyDetector:
                 box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
 
-                # Draw detection
-                color = (0, 255, 0) if class_id == 15 else (0, 0, 255)
-                cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-                cv2.putText(frame, f"{label}: {confidence:.2f}", (startX, startY - 5),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
                 if class_id == 15:  # person
                     anomaly_detected = True
                     person_count += 1
+                    # Draw bounding box on person only
+                    color = (0, 0, 255)
+                    cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+                    cv2.putText(frame, f"Person: {confidence:.2f}", (startX, startY - 5),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         if anomaly_detected:
             return {

@@ -11,7 +11,6 @@ if platform.system() == "Windows":
 
 # Add root path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-
 from inference import AnomalyDetector
 
 module = AnomalyDetector()
@@ -31,7 +30,7 @@ while True:
         break
 
     frame_copy = frame.copy()
-    result = module.run(frame)
+    result = module.run(frame_copy)
     status = result["status"]
     confidence = result["confidence"]
     details = result["details"]
@@ -54,16 +53,13 @@ while True:
         alert_triggered = False
         alert_timer = None
 
-    # Visualize detections (draw red box for anomaly, green for normal)
+    # Label and status overlay (not bounding boxes)
     color = (0, 0, 255) if status == "anomaly" else (0, 255, 0)
-    label = "Person (Anomaly)" if status == "anomaly" else "Person"
-
-    # Only draw if status is not inactive
+    label = "Person (Anomaly)" if status == "anomaly" else "No Person"
+    
     if status != "inactive":
-        cv2.rectangle(frame_copy, (50, 50), (width - 50, height - 50), color, 2)
-        cv2.putText(frame_copy, label, (60, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+        cv2.putText(frame_copy, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
-    # Status details
     cv2.putText(frame_copy, f"{details} | Conf: {confidence:.2f}", (10, height - 20),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
